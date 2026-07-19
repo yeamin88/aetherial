@@ -189,16 +189,16 @@
             <div class="error" id="error"></div>
         </div>
 
-        <div class="footer">Aetherial · generated with Cloudflare</div>
+        <div class="footer">Aetherial · generated with Pollinations.ai</div>
     </div>
 
     <script>
         let isGenerating = false;
 
-        // ✅ NUOVO WORKER CLOUDFLARE (testato e funzionante su GitHub Pages)
-        const CF_WORKER_URL = 'https://aetherial-api.yeamin88.workers.dev/';
-
-        async function generaImmagine() {
+        // ✅ POLLINATIONS CON "IMAGE TAG TRICK" (Nessun blocco CORS)
+        // Questo metodo carica l'immagine come se fosse un normale file immagine, 
+        // bypassando tutti i blocchi delle API.
+        function generaImmagine() {
             const prompt = document.getElementById('prompt').value.trim();
             if (!prompt) { mostraErrore('Scrivi un prompt!'); return; }
 
@@ -225,36 +225,26 @@
             img.src = '';
             errorDiv.style.display = 'none';
 
-            try {
-                const response = await fetch(CF_WORKER_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: prompt })
-                });
+            // ✅ Costruiamo l'URL diretto di Pollinations (che è un'immagine, non un'API)
+            const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&model=flux&nologin=true`;
 
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-
-                const data = await response.json();
-
-                if (data.success && data.image) {
-                    img.src = data.image;
-                    img.style.display = 'block';
-                    loadingText.style.display = 'none';
-                    document.getElementById('prompt').value = '';
-                } else {
-                    throw new Error(data.error || 'Errore sconosciuto');
-                }
-
-            } catch (err) {
-                mostraErrore('⚠️ ' + err.message);
-            } finally {
+            // Impostiamo il src dell'immagine: se carica, funziona. Se fallisce, errore.
+            img.onload = function() {
+                img.style.display = 'block';
+                loadingText.style.display = 'none';
+                loader.style.display = 'none';
                 btn.disabled = false;
                 btn.textContent = '✨ Genera';
-                loader.style.display = 'none';
                 isGenerating = false;
-            }
+                document.getElementById('prompt').value = '';
+            };
+
+            img.onerror = function() {
+                mostraErrore('Errore di caricamento dell\'immagine. Riprova.');
+            };
+
+            // Avvia il caricamento
+            img.src = imageUrl;
         }
 
         function mostraErrore(msg) {

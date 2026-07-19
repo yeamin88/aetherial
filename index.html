@@ -189,13 +189,12 @@
             <div class="error" id="error"></div>
         </div>
 
-        <div class="footer">Aetherial · generated with Cloudflare</div>
+        <div class="footer">Aetherial · generated with Pollinations.ai</div>
     </div>
 
     <script>
         let isGenerating = false;
 
-        // ✅ IMAGE PROXY (funziona al 100% su GitHub Pages)
         function generaImmagine() {
             const prompt = document.getElementById('prompt').value.trim();
             if (!prompt) { mostraErrore('Scrivi un prompt!'); return; }
@@ -223,9 +222,8 @@
             img.src = '';
             errorDiv.style.display = 'none';
 
-            // Creiamo l'URL dell'immagine, ma lo passiamo attraverso un proxy Cloudflare
-            // Questo proxy prende l'immagine e la serve come se venisse dal tuo dominio.
-            const imageUrl = `https://images.weserv.nl/?url=image.pollinations.ai%2Fprompt%2F${encodeURIComponent(prompt)}%3Fwidth%3D1024%26height%3D1024%26model%3Dflux%26nologin%3Dtrue`;
+            // ✅ URL diretto a Pollinations (usa il "trucco" del tag img)
+            const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&model=flux&nologin=true`;
 
             img.onload = function() {
                 img.style.display = 'block';

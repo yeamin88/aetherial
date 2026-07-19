@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aetherial · Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Comfortaa', sans-serif;
+            background: #050505;
+            color: #f0f4ff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .login-box {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 24px;
+            padding: 40px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+        .login-box h2 { color: #a855f7; margin-bottom: 20px; }
+        .login-box input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            background: #0d0d0d;
+            border: 1px solid #2a2a2a;
+            border-radius: 12px;
+            color: #fff;
+            font-family: 'Comfortaa', sans-serif;
+            font-size: 16px;
+        }
+        .login-box button {
+            width: 100%;
+            padding: 14px;
+            background: #a855f7;
+            border: none;
+            color: #fff;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .dashboard { display: none; max-width: 800px; width: 100%; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .header h1 { font-size: 28px; color: #a855f7; }
+        .logout-btn { background: transparent; border: 1px solid #ef4444; color: #ef4444; padding: 8px 16px; border-radius: 12px; cursor: pointer; }
+
+        .card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 20px; padding: 20px; margin-bottom: 20px; }
+        .card h3 { color: #9ca3af; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+        .history-list { max-height: 400px; overflow-y: auto; }
+        .history-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .history-item .prompt { flex: 1; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .history-item .time { color: #6b7280; font-size: 12px; margin: 0 10px; }
+        .delete-btn { background: transparent; border: none; color: #ef4444; cursor: pointer; }
+        .blacklist-input { display: flex; gap: 10px; margin-top: 10px; }
+        .blacklist-input input { flex: 1; padding: 10px; background: #0d0d0d; border: 1px solid #2a2a2a; border-radius: 12px; color: #fff; }
+        .blacklist-input button { padding: 10px 20px; background: #a855f7; border: none; color: #fff; border-radius: 12px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div id="loginBox" class="login-box">
+        <h2>🔐 Aetherial Admin</h2>
+        <input type="text" id="adminUser" placeholder="Username">
+        <input type="password" id="adminPass" placeholder="Password">
+        <button onclick="tentaLogin()">Accedi</button>
+    </div>
+
+    <div id="dashboard" class="dashboard">
+        <div class="header">
+            <h1>👑 Aetherial Dashboard</h1>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+
+        <div class="card">
+            <h3>📜 Storico Prompt</h3>
+            <div class="history-list" id="historyContainer"></div>
+        </div>
+
+        <div class="card">
+            <h3>🚫 Blacklist</h3>
+            <div class="blacklist-input">
+                <input type="text" id="newBlacklistWord" placeholder="Parola da bloccare">
+                <button onclick="aggiungiBlacklist()">Aggiungi</button>
+            </div>
+            <div id="blacklistContainer" style="margin-top:10px; display:flex; flex-wrap:wrap; gap:8px;"></div>
+        </div>
+    </div>
+
+    <script>
+        // 🔐 CREDENZIALI (salvate in locale)
+        const ADMIN_USER = 'aetherial';
+        const ADMIN_PASS = 'aetherialstaffonly0010';
+
+        // Carica dati da localStorage
+        function caricaDati() {
+            const raw = localStorage.getItem('aetherial_data');
+            if (raw) return JSON.parse(raw);
+            return { history: [], blacklist: [] };
+        }
+
+        function salvaDati(data) {
+            localStorage.setItem('aetherial_data', JSON.stringify(data));
+        }
+
+        function tentaLogin() {
+            const user = document.getElementById('adminUser').value;
+            const pass = document.getElementById('adminPass').value;
+            if (user === ADMIN_USER && pass === ADMIN_PASS) {
+                document.getElementById('loginBox').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+                caricaDashboard();
+            } else {
+                alert('❌ Credenziali errate');
+            }
+        }
+
+        function logout() {
+            document.getElementById('loginBox').style.display = 'block';
+            document.getElementById('dashboard').style.display = 'none';
+        }
+
+        function caricaDashboard() {
+            const data = caricaDati();
+            
+            // Storico
+            const container = document.getElementById('historyContainer');
+            container.innerHTML = '';
+            data.history.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'history-item';
+                div.innerHTML = `
+                    <span class="prompt">${item.prompt}</span>
+                    <span class="time">${item.data}</span>
+                    <button class="delete-btn" onclick="eliminaPrompt(${index})">🗑️</button>
+                `;
+                container.appendChild(div);
+            });
+
+            // Blacklist
+            const blContainer = document.getElementById('blacklistContainer');
+            blContainer.innerHTML = '';
+            data.blacklist.forEach(word => {
+                const span = document.createElement('span');
+                span.style.cssText = 'background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); padding:4px 12px; border-radius:12px; font-size:13px; color:#ef4444; display:flex; align-items:center; gap:8px;';
+                span.innerHTML = `${word} <span onclick="rimuoviBlacklist('${word}')" style="cursor:pointer;">✕</span>`;
+                blContainer.appendChild(span);
+            });
+        }
+
+        // --- FUNZIONI DI MODIFICA ---
+
+        function eliminaPrompt(index) {
+            if (!confirm('Eliminare questo prompt dalla storia?')) return;
+            const data = caricaDati();
+            data.history.splice(index, 1);
+            salvaDati(data);
+            caricaDashboard();
+        }
+
+        function aggiungiBlacklist() {
+            const word = document.getElementById('newBlacklistWord').value.trim();
+            if (!word) return;
+            const data = caricaDati();
+            if (!data.blacklist.includes(word)) {
+                data.blacklist.push(word);
+                salvaDati(data);
+            }
+            document.getElementById('newBlacklistWord').value = '';
+            caricaDashboard();
+        }
+
+        function rimuoviBlacklist(word) {
+            const data = caricaDati();
+            data.blacklist = data.blacklist.filter(w => w !== word);
+            salvaDati(data);
+            caricaDashboard();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aetherial · Generatore di immagini</title>
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Comfortaa', sans-serif;
+            background: #050505;
+            color: #f0f4ff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .wrapper { max-width: 900px; width: 100%; text-align: center; }
+
+        .header {
+            padding: 30px 0 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 36px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #a855f7, #06b6d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 2px;
+        }
+        .logo span { font-weight: 400; color: #6b7280; -webkit-text-fill-color: #6b7280; }
+        
+        .admin-btn {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-family: 'Comfortaa', sans-serif;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.3s;
+            text-decoration: none;
+        }
+        .admin-btn:hover { background: rgba(239, 68, 68, 0.25); transform: scale(1.05); }
+
+        .prompt-box {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 24px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        .prompt-box h2 { font-size: 18px; font-weight: 400; color: #9ca3af; margin-bottom: 15px; }
+        .input-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .input-group textarea {
+            flex: 1;
+            min-width: 250px;
+            background: #0d0d0d;
+            border: 1px solid #2a2a2a;
+            border-radius: 16px;
+            padding: 16px;
+            color: #fff;
+            font-family: 'Comfortaa', sans-serif;
+            font-size: 16px;
+            resize: vertical;
+            min-height: 60px;
+            transition: 0.3s;
+        }
+        .input-group textarea:focus {
+            outline: none;
+            border-color: #a855f7;
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.15);
+        }
+        .btn-generate {
+            background: #a855f7;
+            border: none;
+            color: #fff;
+            padding: 16px 32px;
+            border-radius: 16px;
+            font-family: 'Comfortaa', sans-serif;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 4px 20px rgba(168, 85, 247, 0.3);
+        }
+        .btn-generate:hover { transform: scale(1.02); background: #9333ea; }
+        .btn-generate:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .btn-reset {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #9ca3af;
+            padding: 8px 20px;
+            border-radius: 16px;
+            font-family: 'Comfortaa', sans-serif;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 10px;
+            display: inline-block;
+        }
+        .btn-reset:hover { border-color: #a855f7; color: #fff; }
+
+        .result-box {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 24px;
+            padding: 30px;
+            min-height: 200px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            position: relative;
+        }
+        .result-box .placeholder { color: #4b5563; font-size: 14px; }
+        .result-box img {
+            max-width: 100%;
+            max-height: 600px;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+            animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+        .loader {
+            display: none;
+            width: 40px; height: 40px;
+            border: 4px solid rgba(255,255,255,0.1);
+            border-top: 4px solid #a855f7;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        .loading-text {
+            display: none;
+            color: #9ca3af;
+            font-size: 14px;
+            margin-top: 15px;
+        }
+        .error { color: #ef4444; font-size: 14px; margin-top: 15px; display: none; }
+        .footer { margin-top: 40px; font-size: 12px; color: #4b5563; letter-spacing: 1px; }
+
+        @media (max-width: 600px) {
+            .input-group { flex-direction: column; }
+            .btn-generate { width: 100%; }
+            .logo { font-size: 28px; }
+            .header { flex-direction: column; gap: 15px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <header class="header">
+            <div class="logo">Aetherial<span> .ai</span></div>
+            <a href="admin.html" class="admin-btn">👑 ADMIN ONLY</a>
+        </header>
+
+        <div class="prompt-box">
+            <h2>Descrivi ciò che vuoi vedere</h2>
+            <div class="input-group">
+                <textarea id="prompt" placeholder="Es. Un ritratto realistico di una ragazza con occhi blu, luce naturale, pelle imperfetta"></textarea>
+                <button class="btn-generate" id="generateBtn" onclick="generaImmagine()">✨ Genera</button>
+                <button class="btn-reset" onclick="resetSito()">🔄 Pulisci</button>
+            </div>
+        </div>
+
+        <div class="result-box" id="resultBox">
+            <div class="loader" id="loader"></div>
+            <div class="loading-text" id="loadingText">⏳ Generando...</div>
+            <div class="placeholder" id="placeholder">Inserisci un prompt e genera</div>
+            <img id="resultImage" style="display:none;" alt="Immagine generata">
+            <div class="error" id="error"></div>
+        </div>
+
+        <div class="footer">Aetherial · generated with Cloudflare</div>
+    </div>
+
+    <script>
+        let isGenerating = false;
+
+        // ✅ Cloudflare Worker URL (funziona su GitHub Pages)
+        const CF_WORKER_URL = 'https://stable-diffusion-api.maybe-ai.workers.dev/';
+
+        async function generaImmagine() {
+            const prompt = document.getElementById('prompt').value.trim();
+            if (!prompt) { mostraErrore('Scrivi un prompt!'); return; }
+
+            if (isGenerating) {
+                mostraErrore('Generazione già in corso.');
+                return;
+            }
+
+            isGenerating = true;
+
+            const btn = document.getElementById('generateBtn');
+            const loader = document.getElementById('loader');
+            const loadingText = document.getElementById('loadingText');
+            const placeholder = document.getElementById('placeholder');
+            const img = document.getElementById('resultImage');
+            const errorDiv = document.getElementById('error');
+
+            btn.disabled = true;
+            btn.textContent = '⏳ Generando...';
+            loader.style.display = 'block';
+            loadingText.style.display = 'block';
+            placeholder.style.display = 'none';
+            img.style.display = 'none';
+            img.src = '';
+            errorDiv.style.display = 'none';
+
+            try {
+                const response = await fetch(CF_WORKER_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: prompt })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.success && data.image) {
+                    img.src = data.image;
+                    img.style.display = 'block';
+                    loadingText.style.display = 'none';
+                    document.getElementById('prompt').value = '';
+                } else {
+                    throw new Error(data.error || 'Errore sconosciuto');
+                }
+
+            } catch (err) {
+                mostraErrore('⚠️ ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '✨ Genera';
+                loader.style.display = 'none';
+                isGenerating = false;
+            }
+        }
+
+        function mostraErrore(msg) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = msg;
+            errorDiv.style.display = 'block';
+            document.getElementById('loadingText').style.display = 'none';
+            document.getElementById('loader').style.display = 'none';
+            isGenerating = false;
+            document.getElementById('generateBtn').disabled = false;
+            document.getElementById('generateBtn').textContent = '✨ Genera';
+        }
+
+        function resetSito() {
+            document.getElementById('prompt').value = '';
+            document.getElementById('resultImage').style.display = 'none';
+            document.getElementById('resultImage').src = '';
+            document.getElementById('placeholder').style.display = 'block';
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('loadingText').style.display = 'none';
+            document.getElementById('loader').style.display = 'none';
+            isGenerating = false;
+            document.getElementById('generateBtn').disabled = false;
+            document.getElementById('generateBtn').textContent = '✨ Genera';
+        }
+    </script>
+</body>
+</html>
